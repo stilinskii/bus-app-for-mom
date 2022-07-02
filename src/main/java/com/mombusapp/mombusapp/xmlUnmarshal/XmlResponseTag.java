@@ -15,6 +15,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Getter @Setter @ToString
 public class XmlResponseTag {
     @XmlElement(name="msgBody")
-    private MsgBodyTag[] msgBodyTags;
+    private MsgBodyTag msgBodyTags;
 
 }

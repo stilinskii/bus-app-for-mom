@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="h-100">
+<html class="h-100" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="utf-8">
  
@@ -22,10 +22,6 @@ body{
         user-select: none;
       }
 
-      
-
-
-    
 
       
 main > .container {
@@ -94,20 +90,10 @@ h2{
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>20-1</td>
-        <td>10분</td>
-        <td>20분</td>
-      </tr>
-      <tr>
-        <td>20-1</td>
-        <td>10분</td>
-        <td>20분</td>
-      </tr>
-      <tr>
-        <td>20-1</td>
-        <td>10분</td>
-        <td>20분</td>
+      <tr th:each="bus:${busToOsanInfo}">
+        <td th:text="${bus.busnum}">20-1</td>
+        <td th:text="${bus.predictTime1}+'분'">10분</td>
+        <td th:test="${bus.predictTime2}+'분'">20분</td>
       </tr>
     </tbody>
   </table>
@@ -127,20 +113,10 @@ h2{
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td>20-1</td>
-      <td>10분</td>
-      <td>20분</td>
-    </tr>
-    <tr>
-      <td>20-1</td>
-      <td>10분</td>
-      <td>20분</td>
-    </tr>
-    <tr>
-      <td>20-1</td>
-      <td>10분</td>
-      <td>20분</td>
+    <tr th:each="bus:${busToSemaInfo}">
+      <td th:text="${bus.busnum}">20-1</td>
+      <td th:text="${bus.predictTime1}+'분'">10분</td>
+      <td th:test="${bus.predictTime2}+'분'">20분</td>
     </tr>
   </tbody>
 </table>

@@ -12,10 +12,10 @@ import javax.xml.bind.Unmarshaller;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Arrays;
+import java.io.UnsupportedEncodingException;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class BusApi {
@@ -23,46 +23,69 @@ public class BusApi {
     public BusApi() {
     }
 
-    public String getArrivalInfo() throws IOException, JAXBException {
-        log.info("getApi access ");
-        StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList"); /*URL*/
-        urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=YHl9nW394M7v47pQqImVXKdls5fjMA5tKRCD%2BZjjEFfHIWc%2BD6QKWxxmpManad2uIcE1b0Icw1AIhQcxDOUf7A%3D%3D"); /*Service Key*/
-        urlBuilder.append("&" + URLEncoder.encode("stationId","UTF-8") + "=" + URLEncoder.encode("223000307", "UTF-8")); /*정류소ID*/
-        URL url = new URL(urlBuilder.toString());
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty("Content-type", "application/json");
-        System.out.println("Response code: " + conn.getResponseCode());
+    //버스들의 도착예정정보가 담긴 어레이 리턴
+    public List<BusInfoDTO> getArrivalInfo(String stationId){
+        //뷰에 넘길 array
+        List<BusInfoDTO> storeBusInfo = new ArrayList<>();
         BufferedReader rd;
-        if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
-            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        } else {
-            rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-        }
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = rd.readLine()) != null) {
-            sb.append(line);
+        HttpURLConnection conn = null;
+        try {
+            StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList"); /*URL*/
+            urlBuilder.append("?" + URLEncoder.encode("serviceKey", "UTF-8") + "=YHl9nW394M7v47pQqImVXKdls5fjMA5tKRCD%2BZjjEFfHIWc%2BD6QKWxxmpManad2uIcE1b0Icw1AIhQcxDOUf7A%3D%3D"); /*Service Key*/
+            urlBuilder.append("&" + URLEncoder.encode("stationId", "UTF-8") + "=" + URLEncoder.encode(stationId, "UTF-8")); /*정류소ID*/
+            URL url = new URL(urlBuilder.toString());
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Content-type", "application/json");
+            System.out.println("Response code: " + conn.getResponseCode());
+
+            //제대로 요청이 처리가 됐을때만 값 불러오기
+            if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+                rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            } else {
+                rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+            }
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = rd.readLine()) != null) {
+                sb.append(line);
+            }
+
+            //최종 버스들의 도착예정 정보들이 담긴 어레이
+            BusArrivalListTag[] busArrivalListTags = xmlUnmarshallingForBusAPI(url);
+            for (BusArrivalListTag busInfo : busArrivalListTags) {
+                BusInfoDTO busInfoDTO = new BusInfoDTO(getBusNum(busInfo.getRouteId()), busInfo.getPredictTime1(), busInfo.getPredictTime2());
+                storeBusInfo.add(busInfoDTO);
+            }
+        rd.close();
+        } catch (ProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            conn.disconnect();
         }
 
+        return storeBusInfo;
+    }
+
+    //xml unmarshalling
+    private BusArrivalListTag[] xmlUnmarshallingForBusAPI(URL url){
+        BusArrivalListTag[] busArrivalListTags = null;
+        try{
         JAXBContext jaxbContext = JAXBContext.newInstance(XmlResponseTag.class);
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-
         XmlResponseTag xmlResponseTag = (XmlResponseTag) unmarshaller.unmarshal(url);
-        MsgBodyTag[] msgBodyTags = xmlResponseTag.getMsgBodyTags();
-        long count = Arrays.stream(msgBodyTags).count();
-        BusArrivalListTag[] busArrivalListTags = msgBodyTags[0].getBusArrivalListTags();
-        busArrivalListTags[0].getPredictTime1();
-        log.info("result={}",count);
-
-//        JsonParser parser = new JsonParser();
-//        JsonElement element = parser.parse(line);
-
-        rd.close();
-        conn.disconnect();
-
-        //log.info("getArrivalInfo={}",sb.toString());
-        return busArrivalListTags[0].getRouteId();
+        MsgBodyTag msgBodyTags = xmlResponseTag.getMsgBodyTags();
+        busArrivalListTags = msgBodyTags.getBusArrivalListTags();
+        }catch (JAXBException e){
+            e.printStackTrace();
+        }
+        return busArrivalListTags;
     }
 
     public String getBusNum(String routeId){
@@ -91,7 +114,7 @@ public class BusApi {
             log.info("result={}", sb.toString());
 
             //버스 번호만 불러오기
-            busNum = sb.toString().substring(sb.indexOf("<routeName>"), sb.indexOf("</routeName>"));
+            busNum = sb.toString().substring(sb.indexOf("<routeName>")+11, sb.indexOf("</routeName>"));
 
             rd.close();
             conn.disconnect();
