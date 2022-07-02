@@ -29,6 +29,9 @@ public class BusApiController {
         return "index";
     }
 
+
+
+
     @ResponseBody
     @GetMapping("/json")
     public List<BusInfoDTO> getInfoTest(){
