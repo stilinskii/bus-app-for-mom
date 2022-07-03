@@ -8,6 +8,8 @@ import lombok.ToString;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import java.util.List;
+
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @Getter
@@ -15,5 +17,5 @@ import javax.xml.bind.annotation.XmlElement;
 @ToString
 public class MsgBodyTag {
     @XmlElement(name="busArrivalList")
-    private BusArrivalListTag[] busArrivalListTags;
+    private List<BusArrivalListTag> busArrivalListTags;
 }

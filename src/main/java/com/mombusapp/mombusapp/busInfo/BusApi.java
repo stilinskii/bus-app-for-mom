@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,16 +52,25 @@ public class BusApi {
             while ((line = rd.readLine()) != null) {
                 sb.append(line);
             }
+            //최종 버스들의 도착예정 정보들이 담긴 어레이
+//            BusArrivalListTag[] busArrivalListTags = xmlUnmarshallingForBusAPI(url);
+//            //최종 버스들의 도착예정정보에서 원하는 정보만 dto에 담아 뷰에 넘길 어레이에 저장
+//            for (BusArrivalListTag busInfo : busArrivalListTags) {
+//                // log.info("predictTime2={}",busInfo.getPredictTime2());
+//                BusInfoDTO busInfoDTO = new BusInfoDTO(getBusNum(busInfo.getRouteId()), busInfo.getPredictTime1(), busInfo.getPredictTime2());
+//                storeBusInfo.add(busInfoDTO);
+//            }
 
             //최종 버스들의 도착예정 정보들이 담긴 어레이
-            Optional<BusArrivalListTag[]> busArrivalListTags = xmlUnmarshallingForBusAPI(url);
-            busArrivalListTags.ifPresent(busArrivalListTag -> {
+            List<BusArrivalListTag> busArrivalListTags = xmlUnmarshallingForBusAPI(url);
+            if(!busArrivalListTags.isEmpty()){
+            busArrivalListTags.forEach(busInfo->{
             //최종 버스들의 도착예정정보에서 원하는 정보만 dto에 담아 뷰에 넘길 어레이에 저장
-                for (BusArrivalListTag busInfo : busArrivalListTag) {
-                    BusInfoDTO busInfoDTO = new BusInfoDTO(getBusNum(busInfo.getRouteId()), busInfo.getPredictTime1(), busInfo.getPredictTime2());
-                    storeBusInfo.add(busInfoDTO);
-                }
+                BusInfoDTO busInfoDTO = new BusInfoDTO(getBusNum(busInfo.getRouteId()), busInfo.getPredictTime1(), busInfo.getPredictTime2());
+                storeBusInfo.add(busInfoDTO);
             });
+            }
+
 
 
         rd.close();
@@ -76,23 +86,29 @@ public class BusApi {
             conn.disconnect();
         }
 
-        return storeBusInfo;
+        return storeBusInfo!= null ? storeBusInfo: Collections.emptyList();
     }
 
     //xml unmarshalling
-    private Optional<BusArrivalListTag[]> xmlUnmarshallingForBusAPI(URL url){
-        Optional<BusArrivalListTag[]> busArrivalListTags = null;
+    private List<BusArrivalListTag> xmlUnmarshallingForBusAPI(URL url){
+        List<BusArrivalListTag> busArrivalListTags = null;
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(XmlResponseTag.class);
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             XmlResponseTag xmlResponseTag = (XmlResponseTag) unmarshaller.unmarshal(url);
             MsgBodyTag msgBodyTags = xmlResponseTag.getMsgBodyTags();
-            busArrivalListTags = Optional.ofNullable(msgBodyTags.getBusArrivalListTags());
+            log.info("msgBodyTags={}",msgBodyTags);
+            if(msgBodyTags!=null){
+            busArrivalListTags = msgBodyTags.getBusArrivalListTags();
+            }else {
+                busArrivalListTags=Collections.emptyList();
+            }
 //        }catch(NullPointerException e){
 
         }catch (JAXBException e){
             e.printStackTrace();
         }
+//        busArrivalListTags != null ? busArrivalListTags: Collections.emptyList()
         return busArrivalListTags;
     }
 
