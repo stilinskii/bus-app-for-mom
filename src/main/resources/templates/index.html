@@ -93,7 +93,7 @@ h2{
       <tr th:each="bus:${busToOsanInfo}">
         <td th:text="${bus.busnum}">20-1</td>
         <td th:text="${bus.predictTime1}+'분'">10분</td>
-        <td th:test="${bus.predictTime2}+'분'">20분</td>
+        <td th:text="${bus.predictTime2}+'분'">20분</td>
       </tr>
     </tbody>
   </table>
