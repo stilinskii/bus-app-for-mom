@@ -55,7 +55,7 @@ public class BusApi {
             BusArrivalListTag[] busArrivalListTags = xmlUnmarshallingForBusAPI(url);
             //최종 버스들의 도착예정정보에서 원하는 정보만 dto에 담아 뷰에 넘길 어레이에 저장
             for (BusArrivalListTag busInfo : busArrivalListTags) {
-                log.info("predictTime2={}",busInfo.getPredictTime2());
+               // log.info("predictTime2={}",busInfo.getPredictTime2());
                 BusInfoDTO busInfoDTO = new BusInfoDTO(getBusNum(busInfo.getRouteId()), busInfo.getPredictTime1(), busInfo.getPredictTime2());
                 storeBusInfo.add(busInfoDTO);
             }
