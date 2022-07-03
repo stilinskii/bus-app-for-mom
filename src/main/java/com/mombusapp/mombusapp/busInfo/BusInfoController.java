@@ -21,6 +21,7 @@ public class BusInfoController {
 
     @GetMapping("/")
     public String getInfo(Model model) {
+
         List<BusInfoDTO> busToOsanInfo = sortBusInfoByPredictTimeASC(busApi.getArrivalInfo(TO_OSAN_STATION_ID));
         List<BusInfoDTO> busToSemaInfo = sortBusInfoByPredictTimeASC(busApi.getArrivalInfo(TO_SEMA_STATION_ID));
 
@@ -30,6 +31,9 @@ public class BusInfoController {
     }
 
     public List<BusInfoDTO> sortBusInfoByPredictTimeASC(List<BusInfoDTO> busInfoDTO){
+        if(busInfoDTO==null){
+            return null;
+        }
         busInfoDTO.sort((Comparator.comparingInt(o -> Integer.parseInt(o.getPredictTime1()))));
         return busInfoDTO;
     }
