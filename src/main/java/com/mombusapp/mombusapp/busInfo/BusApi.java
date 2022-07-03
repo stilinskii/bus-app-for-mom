@@ -116,7 +116,7 @@ public class BusApi {
             while ((line = rd.readLine()) != null) {
                 sb.append(line);
             }
-            log.info("result={}", sb.toString());
+            //log.info("result={}", sb.toString());
 
             //버스 번호만 불러오기
             busNum = sb.toString().substring(sb.indexOf("<routeName>")+11, sb.indexOf("</routeName>"));
