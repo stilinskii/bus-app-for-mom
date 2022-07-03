@@ -7,7 +7,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -22,14 +21,17 @@ public class BusInfoController {
 
     @GetMapping("/")
     public String getInfo(Model model) {
-        List<BusInfoDTO> busToOsanInfo = busApi.getArrivalInfo(TO_OSAN_STATION_ID);
-        List<BusInfoDTO> busToSemaInfo = busApi.getArrivalInfo(TO_SEMA_STATION_ID);
+        List<BusInfoDTO> busToOsanInfo = sortBusInfoByPredictTimeASC(busApi.getArrivalInfo(TO_OSAN_STATION_ID));
+        List<BusInfoDTO> busToSemaInfo = sortBusInfoByPredictTimeASC(busApi.getArrivalInfo(TO_SEMA_STATION_ID));
 
-
-       // log.info("getPredictTime2={}",busToOsanInfo.get(0).getPredictTime2());
         model.addAttribute("busToOsanInfo",busToOsanInfo);
         model.addAttribute("busToSemaInfo",busToSemaInfo);
         return "index";
+    }
+
+    public List<BusInfoDTO> sortBusInfoByPredictTimeASC(List<BusInfoDTO> busInfoDTO){
+        busInfoDTO.sort((Comparator.comparingInt(o -> Integer.parseInt(o.getPredictTime1()))));
+        return busInfoDTO;
     }
 
 
