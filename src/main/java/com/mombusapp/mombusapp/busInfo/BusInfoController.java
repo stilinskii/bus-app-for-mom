@@ -21,17 +21,22 @@ public class BusInfoController {
 
     @GetMapping("/")
     public String getInfo(Model model) {
-
-        List<BusInfoDTO> busToOsanInfo = sortBusInfoByPredictTimeASC(busApi.getArrivalInfo(TO_OSAN_STATION_ID));
-        List<BusInfoDTO> busToSemaInfo = sortBusInfoByPredictTimeASC(busApi.getArrivalInfo(TO_SEMA_STATION_ID));
-
-        model.addAttribute("busToOsanInfo",busToOsanInfo);
-        model.addAttribute("busToSemaInfo",busToSemaInfo);
+        List<BusInfoDTO> busToOsanList = busApi.getArrivalInfo(TO_OSAN_STATION_ID);
+        List<BusInfoDTO> busToSemaList = busApi.getArrivalInfo(TO_SEMA_STATION_ID);
+        //둘 중 하나는 empty가 아닐때 어떻게 해야할지.. TODO
+        if(busToOsanList.isEmpty() && busToSemaList.isEmpty()){
+            model.addAttribute("busToOsanInfo",null);
+            model.addAttribute("busToSemaInfo",null);
+        }else {
+            model.addAttribute("busToOsanList", sortBusInfoByPredictTimeASC(busToOsanList));
+            model.addAttribute("busToSemaList", sortBusInfoByPredictTimeASC(busToSemaList));
+        }
         return "index";
     }
 
     public List<BusInfoDTO> sortBusInfoByPredictTimeASC(List<BusInfoDTO> busInfoDTO){
-        if(busInfoDTO==null){
+
+        if(busInfoDTO.isEmpty()){
             return null;
         }
         busInfoDTO.sort((Comparator.comparingInt(o -> Integer.parseInt(o.getPredictTime1()))));

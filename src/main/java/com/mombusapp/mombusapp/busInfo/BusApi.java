@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class BusApi {
     public List<BusInfoDTO> getArrivalInfo(String stationId){
         //뷰에 넘길 array
         List<BusInfoDTO> storeBusInfo = new ArrayList<>();
+
         BufferedReader rd;
         HttpURLConnection conn = null;
         try {
@@ -53,13 +55,14 @@ public class BusApi {
             }
 
             //최종 버스들의 도착예정 정보들이 담긴 어레이
-            List<BusArrivalListTag> busArrivalListTags = xmlUnmarshallingForBusAPI(url);
-            if(!busArrivalListTags.isEmpty()){
-            busArrivalListTags.forEach(busInfo->{
-            //최종 버스들의 도착예정정보에서 원하는 정보만 dto에 담아 뷰에 넘길 어레이에 저장
-                BusInfoDTO busInfoDTO = new BusInfoDTO(getBusNum(busInfo.getRouteId()), busInfo.getPredictTime1(), busInfo.getPredictTime2());
-                storeBusInfo.add(busInfoDTO);
-            });
+            BusArrivalListTag[] busArrivalListTags = xmlUnmarshallingForBusAPI(url);
+            if(busArrivalListTags.length==0){
+                Arrays.stream(busArrivalListTags).forEach(busInfo->{
+                            //최종 버스들의 도착예정정보에서 원하는 정보만 dto에 담아 뷰에 넘길 어레이에 저장
+                            BusInfoDTO busInfoDTO = new BusInfoDTO(getBusNum(busInfo.getRouteId()), busInfo.getPredictTime1(), busInfo.getPredictTime2());
+                            storeBusInfo.add(busInfoDTO);
+                });
+
             }
 
         rd.close();
@@ -75,28 +78,28 @@ public class BusApi {
             conn.disconnect();
         }
 
-        return storeBusInfo!= null ? storeBusInfo: Collections.emptyList();
+        return storeBusInfo;
     }
 
     //xml unmarshalling
-    private List<BusArrivalListTag> xmlUnmarshallingForBusAPI(URL url){
-        List<BusArrivalListTag> busArrivalListTags = null;
+    private BusArrivalListTag[] xmlUnmarshallingForBusAPI(URL url){
+        BusArrivalListTag[] busArrivalListTags = new BusArrivalListTag[0];
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(XmlResponseTag.class);
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             XmlResponseTag xmlResponseTag = (XmlResponseTag) unmarshaller.unmarshal(url);
             MsgBodyTag msgBodyTags = xmlResponseTag.getMsgBodyTags();
-            log.info("msgBodyTags={}",msgBodyTags);
             //버스 정보가 없을때는 빈 컬렉션 리스트 리턴
+            //array의 문제가 아닌 거 같아서 collection에서 array로 바꿈. 작동잘됨 확인 완료
+            //log.info("msgBodyTags={}",msgBodyTags); //null확인
             if(msgBodyTags!=null){
             busArrivalListTags = msgBodyTags.getBusArrivalListTags();
-            }else {
-                busArrivalListTags=Collections.emptyList();
             }
 
         }catch (JAXBException e){
             e.printStackTrace();
         }
+        //위에서 초기화를 null로 한게 아니라서 불필요 : 86
 //        busArrivalListTags != null ? busArrivalListTags: Collections.emptyList()
         return busArrivalListTags;
     }
